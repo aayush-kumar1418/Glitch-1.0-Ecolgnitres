@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoDispose - E-Waste Drop-off Finder Patna</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loader-container" id="loader">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content" >
+            <a href="#" class="logo">
+                <i class="fas fa-recycle"></i>
+                <span>EcoDispose</span>
+            </a>
+            <nav class="nav-links">
+                <a href="#" class="nav-link">Home</a>
+                <a href="#" class="nav-link">About</a>
+                <a href="#" class="nav-link">Guidelines</a>
+                <a href="tel:18001234567" class="emergency-btn">
+                    <i class="fas fa-phone"></i> Emergency Pickup
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search by location or center name...">
+                    <button class="search-btn" onclick="searchCenters()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="filter-pills">
+                <div class="filter-pill active" onclick="filterByType('all', this)">All Centers</div>
+                <div class="filter-pill" onclick="filterByType('open', this)">Open Now</div>
+                <div class="filter-pill" onclick="filterByType('mobile', this)">Mobiles</div>
+                <div class="filter-pill" onclick="filterByType('laptop', this)">Laptops</div>
+                <div class="filter-pill" onclick="filterByType('battery', this)">Batteries</div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCenters">15</div>
+                    <div class="stat-label">Total Centers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="openCenters">12</div>
+                    <div class="stat-label">Open Now</div>
+                </div>
+            </div>
+
+            <!-- Centers List -->
+            <div class="center-list" id="centersList">
+                <!-- Centers will be dynamically added here -->
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <button class="map-control-btn" onclick="zoomIn()" title="Zoom In">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="map-control-btn" onclick="zoomOut()" title="Zoom Out">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button class="map-control-btn" onclick="getCurrentLocation()" title="My Location">
+                    <i class="fas fa-location-crosshairs"></i>
+                </button>
+                <button class="map-control-btn" onclick="toggleFullscreen()" title="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+   <link rel="stylesheet" href="glitch.css">
+            <!-- Location Indicator -->
+            <div class="location-pulse">
+                <div class="pulse-dot"></div>
+                <span>Live Location Tracking</span>
+            </div>
+
+            <!-- Info Banner -->
+            <div class="info-banner">
+                <i class="fas fa-info-circle"></i>
+                <span>Click on any marker to view center details</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fab-container">
+        <div class="fab-menu" id="fabMenu">
+            <a href="#" class="fab-menu-item">
+                <i class="fas fa-book"></i> E-Waste Guidelines
+            </a>
+            <a href="#" class="fab-menu-item">
+                <i class="fas fa-calendar"></i> Schedule Pickup
+            </a>
+            <a href="#" class="fab-menu-item">
+                <i class="fas fa-question-circle"></i> Help & Support
+            </a>
+        </div>
+        <button class="fab" onclick="toggleFabMenu()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // E-Waste Centers Data
+        const centers = [
+            {
+                id: 1,
+                name: "Bihar State Pollution Control Board",
+                lat: 25.5941,
+                lng: 85.1376,
+                address: "Paryavaran Bhawan, Patna",
+                phone: "+91-612-2222173",
+                hours: "10:00 AM - 5:00 PM",
+                types: ["All E-Waste Types"],
+                status: "open",
+                rating: 4.5
+            },
+            {
+                id: 2,
+                name: "Green E-Waste Recyclers",
+                lat: 25.6093,
+                lng: 85.1235,
+                address: "Bailey Road, Patna",
+                phone: "+91-9876543210",
+                hours: "9:00 AM - 6:00 PM",
+                types: ["Mobiles", "Laptops", "Tablets"],
+                status: "open",
+                rating: 4.2
+            },
+            {
+                id: 3,
+                name: "Patna Municipal Corporation Center",
+                lat: 25.6000,
+                lng: 85.1000,
+                address: "Gandhi Maidan, Patna",
+                phone: "+91-612-2219385",
+                hours: "9:00 AM - 5:00 PM",
+                types: ["All E-Waste Types"],
+                status: "open",
+                rating: 4.0
+            },
+            {
+                id: 4,
+                name: "E-Cycle Hub Kankarbagh",
+                lat: 25.5874,
+                lng: 85.1542,
+                address: "Kankarbagh Main Road",
+                phone: "+91-9123456789",
+                hours: "10:00 AM - 7:00 PM",
+                types: ["Computers", "Printers", "Scanners"],
+                status: "open",
+                rating: 4.3
+            },
+            {
+                id: 5,
+                name: "TechWaste Solutions",
+                lat: 25.6200,
+                lng: 85.1700,
+                address: "Boring Road, Patna",
+                phone: "+91-9988776655",
+                hours: "9:30 AM - 6:30 PM",
+                types: ["Mobiles", "Batteries", "Chargers"],
+                status: "closed",
+                rating: 4.1
+            },
+            {
+                id: 6,
+                name: "Eco Recyclers Patliputra",
+                lat: 25.5700,
+                lng: 85.1800,
+                address: "Patliputra Colony",
+                phone: "+91-9876501234",
+                hours: "10:00 AM - 6:00 PM",
+                types: ["TVs", "Monitors", "Speakers"],
+                status: "open",
+                rating: 3.9
+            },
+            {
+                id: 7,
+                name: "Digital Waste Management Center",
+                lat: 25.6150,
+                lng: 85.1450,
+                address: "Fraser Road Area",
+                phone: "+91-9123098765",
+                hours: "9:00 AM - 5:30 PM",
+                types: ["All E-Waste Types"],
+                status: "open",
+                rating: 4.4
+            },
+            {
+                id: 8,
+                name: "Rajendra Nagar Collection Point",
+                lat: 25.5950,
+                lng: 85.1650,
+                address: "Rajendra Nagar Road",
+                phone: "+91-9988123456",
+                hours: "10:30 AM - 5:30 PM",
+                types: ["Small Electronics", "Cables"],
+                status: "open",
+                rating: 3.8
+            },
+            {
+                id: 9,
+                name: "Green Tech Disposal",
+                lat: 25.6080,
+                lng: 85.1150,
+                address: "Ashok Rajpath",
+                phone: "+91-9876123450",
+                hours: "9:00 AM - 6:00 PM",
+                types: ["Laptops", "Hard Drives", "RAM"],
+                status: "closed",
+                rating: 4.2
+            },
+            {
+                id: 10,
+                name: "Patna University E-Waste Center",
+                lat: 25.6100,
+                lng: 85.1720,
+                address: "Patna University Campus",
+                phone: "+91-612-2233445",
+                hours: "10:00 AM - 4:00 PM",
+                types: ["Educational Equipment"],
+                status: "open",
+                rating: 4.0
+            },
+            {
+                id: 11,
+                name: "AIIMS Patna Collection Center",
+                lat: 25.5650,
+                lng: 85.0900,
+                address: "AIIMS Campus, Phulwarisharif",
+                phone: "+91-612-2451070",
+                hours: "9:00 AM - 3:00 PM",
+                types: ["Medical Equipment", "Batteries"],
+                status: "open",
+                rating: 4.5
+            },
+            {
+                id: 12,
+                name: "Smart City E-Waste Hub",
+                lat: 25.5850,
+                lng: 85.1200,
+                address: "Exhibition Road",
+                phone: "+91-9123567890",
+                hours: "10:00 AM - 7:00 PM",
+                types: ["Smart Devices", "IoT Devices"],
+                status: "open",
+                rating: 4.3
+            },
+            {
+                id: 13,
+                name: "Danapur Recycling Center",
+                lat: 25.6050,
+                lng: 85.0450,
+                address: "Danapur Cantt Area",
+                phone: "+91-9876009876",
+                hours: "9:30 AM - 5:30 PM",
+                types: ["All E-Waste Types"],
+                status: "closed",
+                rating: 3.7
+            },
+            {
+                id: 14,
+                name: "Buddha Smriti Park Collection",
+                lat: 25.5980,
+                lng: 85.1440,
+                address: "Near Buddha Smriti Park",
+                phone: "+91-9988001122",
+                hours: "8:00 AM - 6:00 PM",
+                types: ["Mobiles", "Tablets", "Earphones"],
+                status: "open",
+                rating: 4.1
+            },
+            {
+                id: 15,
+                name: "Eco-Friendly Disposal Center",
+                lat: 25.6120,
+                lng: 85.1580,
+                address: "SK Puri, Boring Road",
+                phone: "+91-9123123123",
+                hours: "10:00 AM - 6:00 PM",
+                types: ["Computers", "Peripherals"],
+                status: "open",
+                rating: 4.0
+            }
+        ];
+
+        let map;
+        let markers = [];
+        let currentLocationMarker;
+
+        // Initialize Map
+        function initMap() {
+            map = L.map('map').setView([25.5941, 85.1376], 13);
+
+            // Dark theme map tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            // Add markers for all centers
+            addMarkers();
+            
+            // Populate sidebar
+            populateCentersList(centers);
+
+            // Hide info banner after 5 seconds
+            setTimeout(() => {
+                document.querySelector('.info-banner').style.display = 'none';
+            }, 5000);
+        }
+
+        // Custom marker icon
+        const customIcon = L.divIcon({
+            html: `<div style="background: linear-gradient(135deg, #10b981, #059669); 
+                    width: 40px; height: 40px; border-radius: 50% 50% 50% 0; 
+                    transform: rotate(-45deg); display: flex; align-items: center; 
+                    justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                    <i class="fas fa-recycle" style="transform: rotate(45deg); color: white; font-size: 18px;"></i>
+                   </div>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -40],
+            className: 'custom-marker'
+        });
+
+        // Add markers to map
+        function addMarkers() {
+            centers.forEach(center => {
+                const marker = L.marker([center.lat, center.lng], { icon: customIcon })
+                    .addTo(map);
+
+                // Create popup content
+                const popupContent = `
+                    <div class="custom-popup">
+                        <div class="popup-header">${center.name}</div>
+                        <div class="popup-content">
+                            <div class="popup-info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>${center.address}</span>
+                            </div>
+                            <div class="popup-info-item">
+                                <i class="fas fa-phone"></i>
+                                <span>${center.phone}</span>
+                            </div>
+                            <div class="popup-info-item">
+                                <i class="fas fa-clock"></i>
+                                <span>${center.hours}</span>
+                            </div>
+                            <div class="popup-info-item">
+                                <i class="fas fa-star" style="color: gold;"></i>
+                                <span>Rating: ${center.rating}/5</span>
+                            </div>
+                        </div>
+                        <div class="popup-actions">
+                            <button class="popup-btn popup-btn-primary" onclick="getDirections(${center.lat}, ${center.lng})">
+                                <i class="fas fa-directions"></i> Directions
+                            </button>
+                            <button class="popup-btn popup-btn-secondary" onclick="callCenter('${center.phone}')">
+                                <i class="fas fa-phone"></i> Call
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+                marker.centerId = center.id;
+                markers.push(marker);
+
+                // Add click event to highlight corresponding card
+                marker.on('click', () => {
+                    highlightCenterCard(center.id);
+                    map.setView([center.lat, center.lng], 15);
+                });
+            });
+        }
+
+        // Populate centers list in sidebar
+        function populateCentersList(centersToShow) {
+            const centersList = document.getElementById('centersList');
+            centersList.innerHTML = '';
+
+            centersToShow.forEach(center => {
+                const centerCard = document.createElement('div');
+                centerCard.className = 'center-card';
+                centerCard.id = `center-${center.id}`;
+                centerCard.onclick = () => centerCardClick(center);
+
+                const isOpen = center.status === 'open';
+                const statusClass = isOpen ? 'status-open' : 'status-closed';
+                const statusText = isOpen ? 'Open' : 'Closed';
+
+                centerCard.innerHTML = `
+                    <div class="center-header">
+                        <div class="center-name">${center.name}</div>
+                        <div class="center-status ${statusClass}">${statusText}</div>
+                    </div>
+                    <div class="center-info">
+                        <div class="center-info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${center.address}</span>
+                        </div>
+                        <div class="center-info-item">
+                            <i class="fas fa-clock"></i>
+                            <span>${center.hours}</span>
+                        </div>
+                        <div class="center-info-item">
+                            <i class="fas fa-star" style="color: gold;"></i>
+                            <span>${center.rating}/5 Rating</span>
+                        </div>
+                    </div>
+                    <div class="center-types">
+                        ${center.types.map(type => `<span class="type-badge">${type}</span>`).join('')}
+                    </div>
+                `;
+
+                centersList.appendChild(centerCard);
+            });
+
+            // Update stats
+            updateStats(centersToShow);
+        }
+
+        // Update statistics
+        function updateStats(centersToShow) {
+            const totalCenters = centersToShow.length;
+            const openCenters = centersToShow.filter(c => c.status === 'open').length;
+            
+            document.getElementById('totalCenters').textContent = totalCenters;
+            document.getElementById('openCenters').textContent = openCenters;
+        }
+
+        // Center card click handler
+        function centerCardClick(center) {
+            // Remove active class from all cards
+            document.querySelectorAll('.center-card').forEach(card => {
+                card.classList.remove('active');
+            });
+
+            // Add active class to clicked card
+            document.getElementById(`center-${center.id}`).classList.add('active');
+
+            // Find and open marker popup
+            const marker = markers.find(m => m.centerId === center.id);
+            if (marker) {
+                map.setView([center.lat, center.lng], 15);
+                marker.openPopup();
+                
+                // Add bounce animation to marker
+                const markerElement = marker.getElement();
+                if (markerElement) {
+                    markerElement.classList.add('marker-bounce');
+                    setTimeout(() => {
+                        markerElement.classList.remove('marker-bounce');
+                    }, 500);
+                }
+            }
+        }
+
+        // Highlight center card when marker is clicked
+        function highlightCenterCard(centerId) {
+            document.querySelectorAll('.center-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            const card = document.getElementById(`center-${centerId}`);
+            if (card) {
+                card.classList.add('active');
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Search functionality
+        function searchCenters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filteredCenters = centers.filter(center => 
+                center.name.toLowerCase().includes(searchTerm) ||
+                center.address.toLowerCase().includes(searchTerm) ||
+                center.types.some(type => type.toLowerCase().includes(searchTerm))
+            );
+
+            populateCentersList(filteredCenters);
+            
+            // Update markers visibility
+            markers.forEach(marker => {
+                const centerExists = filteredCenters.find(c => c.id === marker.centerId);
+                if (centerExists) {
+                    marker.addTo(map);
+                } else {
+                    marker.remove();
+                }
+            });
+        }
+
+        // Filter by type
+        function filterByType(type, element) {
+            // Update active pill
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            let filteredCenters;
+            
+            if (type === 'all') {
+                filteredCenters = centers;
+            } else if (type === 'open') {
+                filteredCenters = centers.filter(c => c.status === 'open');
+            } else {
+                filteredCenters = centers.filter(c => 
+                    c.types.some(t => t.toLowerCase().includes(type))
+                );
+            }
+
+            populateCentersList(filteredCenters);
+            
+            // Update markers
+            markers.forEach(marker => {
+                const centerExists = filteredCenters.find(c => c.id === marker.centerId);
+                if (centerExists) {
+                    marker.addTo(map);
+                } else {
+                    marker.remove();
+                }
+            });
+        }
+
+        // Map control functions
+        function zoomIn() {
+            map.zoomIn();
+        }
+
+        function zoomOut() {
+            map.zoomOut();
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        // Remove existing location marker if any
+                        if (currentLocationMarker) {
+                            map.removeLayer(currentLocationMarker);
+                        }
+                        
+                        // Add current location marker
+                        currentLocationMarker = L.marker([lat, lng], {
+                            icon: L.divIcon({
+                                html: `<div style="background: #3b82f6; width: 20px; height: 20px; 
+                                        border-radius: 50%; border: 3px solid white; 
+                                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
+                                iconSize: [20, 20],
+                                iconAnchor: [10, 10]
+                            })
+                        }).addTo(map);
+                        
+                        currentLocationMarker.bindPopup('You are here!').openPopup();
+                        map.setView([lat, lng], 14);
+                    },
+                    (error) => {
+                        alert('Unable to retrieve your location. Please enable location services.');
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by your browser.');
+            }
+        }
+
+        function toggleFullscreen() {
+            const mapContainer = document.querySelector('.map-container');
+            
+            if (!document.fullscreenElement) {
+                mapContainer.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Get directions
+        function getDirections(lat, lng) {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            window.open(url, '_blank');
+        }
+
+        // Call center
+        function callCenter(phone) {
+            window.location.href = `tel:${phone}`;
+        }
+
+        // Toggle FAB menu
+        function toggleFabMenu() {
+            const fabMenu = document.getElementById('fabMenu');
+            const fab = document.querySelector('.fab');
+            
+            fabMenu.classList.toggle('active');
+            
+            if (fabMenu.classList.contains('active')) {
+                fab.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                fab.innerHTML = '<i class="fas fa-plus"></i>';
+            }
+        }
+
+        // Hide loader and initialize map when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500);
+                
+                initMap();
+            }, 1000);
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('searchInput').focus();
+                        break;
+                    case 'l':
+                        e.preventDefault();
+                        getCurrentLocation();
+                        break;
+                }
+            }
+        });
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchCenters();
+            }
+        });
+    </script>
+</body>
+</html>
